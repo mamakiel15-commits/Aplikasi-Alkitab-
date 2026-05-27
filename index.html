@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alkitab Online Lengkap</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f4f7f6; color: #333; }
+        h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
+        .controls { display: flex; gap: 10px; margin-bottom: 25px; justify-content: center; flex-wrap: wrap; }
+        select, button { padding: 12px 20px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; background-color: white; }
+        button { background-color: #2ecc71; color: white; cursor: pointer; border: none; font-weight: bold; transition: background 0.2s; }
+        button:hover { background-color: #27ae60; }
+        #output { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); line-height: 1.8; font-size: 18px; }
+        .ayat { margin-bottom: 16px; text-align: justify; }
+        .nomor { font-weight: bold; color: #e74c3c; margin-right: 8px; font-size: 14px; vertical-align: super; }
+    </style>
+</head>
+<body>
+
+    <h1>📖 Alkitab Online Lengkap</h1>
+    
+    <div class="controls">
+        <select id="kitab" onchange="updatePasal()"></select>
+        <select id="pasal"></select>
+        <button onclick="ambilAyat()">Baca</button>
+    </div>
+
+    <div id="output">Silakan pilih kitab dan pasal, lalu klik tombol Baca.</div>
+
+    <script>
+        // Data seluruh 66 kitab Alkitab beserta jumlah pasalnya
+        const daftarKitab = [
+            { id: "kejadian", nama: "Kejadian", pasal: 50 }, { id: "keluaran", nama: "Keluaran", pasal: 40 },
+            { id: "imamat", nama: "Imamat", pasal: 27 }, { id: "bilangan", nama: "Bilangan", pasal: 36 },
+            { id: "ulangan", nama: "Ulangan", pasal: 34 }, { id: "yosua", nama: "Yosua", pasal: 24 },
+            { id: "hakim-hakim", nama: "Hakim-Hakim", pasal: 21 }, { id: "rut", nama: "Rut", pasal: 4 },
+            { id: "1samuel", nama: "1 Samuel", pasal: 31 }, { id: "2samuel", nama: "2 Samuel", pasal: 24 },
+            { id: "1raja-raja", nama: "1 Raja-Raja", pasal: 22 }, { id: "2raja-raja", nama: "2 Raja-Raja", pasal: 25 },
+            { id: "1tawarikh", nama: "1 Tawarikh", pasal: 29 }, { id: "2tawarikh", nama: "2 Tawarikh", pasal: 36 },
+            { id: "ezra", nama: "Ezra", pasal: 10 }, { id: "nehemia", nama: "Nehemia", pasal: 13 },
+            { id: "ester", nama: "Ester", pasal: 10 }, { id: "ayub", nama: "Ayub", pasal: 42 },
+            { id: "mazmur", nama: "Mazmur", pasal: 150 }, { id: "amsal", nama: "Amsal", pasal: 31 },
+            { id: "pengkhotbah", nama: "Pengkhotbah", pasal: 12 }, { id: "kidungagung", nama: "Kidung Agung", pasal: 8 },
+            { id: "yesaya", nama: "Yesaya", pasal: 66 }, { id: "yeremia", nama: "Yeremia", pasal: 52 },
+            { id: "ratapan", nama: "Ratapan", pasal: 5 }, { id: "yehezkiel", nama: "Yehezkiel", pasal: 48 },
+            { id: "daniel", nama: "Daniel", pasal: 12 }, { id: "hosea", nama: "Hosea", pasal: 14 },
+            { id: "yoel", nama: "Yoel", pasal: 3 }, { id: "amos", nama: "Amos", pasal: 9 },
+            { id: "obaja", nama: "Obaja", pasal: 1 }, { id: "yunus", nama: "Yunus", pasal: 4 },
+            { id: "mikha", nama: "Mikha", pasal: 7 }, { id: "nahum", nama: "Nahum", pasal: 3 },
+            { id: "habakuk", nama: "Habakuk", pasal: 3 }, { id: "zefanya", nama: "Zefanya", pasal: 3 },
+            { id: "hagai", nama: "Hagai", pasal: 2 }, { id: "zakharia", nama: "Zakharia", pasal: 14 },
+            { id: "maleakhi", nama: "Maleakhi", pasal: 4 }, { id: "matius", nama: "Matius", pasal: 28 },
+            { id: "markus", nama: "Markus", pasal: 16 }, { id: "lukas", nama: "Lukas", pasal: 24 },
+            { id: "yohanes", nama: "Yohanes", pasal: 21 }, { id: "kisahpararasul", nama: "Kisah Para Rasul", pasal: 28 },
+            { id: "roma", nama: "Roma", pasal: 16 }, { id: "1korintus", nama: "1 Korintus", pasal: 16 },
+            { id: "2korintus", nama: "2 Korintus", pasal: 13 }, { id: "galatia", nama: "Galatia", pasal: 6 },
+            { id: "efesus", nama: "Efesus", pasal: 6 }, { id: "filipi", nama: "Filipi", pasal: 4 },
+            { id: "kolose", nama: "Kolose", pasal: 4 }, { id: "1tesalonika", nama: "1 Tesalonika", pasal: 5 },
+            { id: "2tesalonika", nama: "2 Tesalonika", pasal: 3 }, { id: "1timotius", nama: "1 Timotius", pasal: 6 },
+            { id: "2timotius", nama: "2 Timotius", pasal: 4 }, { id: "titus", nama: "Titus", pasal: 3 },
+            { id: "filemon", nama: "Filemon", pasal: 1 }, { id: "ibrani", nama: "Ibrani", pasal: 13 },
+            { id: "yakobus", nama: "Yakobus", pasal: 5 }, { id: "1petrus", nama: "1 Petrus", pasal: 5 },
+            { id: "2petrus", nama: "2 Petrus", pasal: 3 }, { id: "1yohanes", nama: "1 Yohanes", pasal: 5 },
+            { id: "2yohanes", nama: "2 Yohanes", pasal: 1 }, { id: "3yohanes", nama: "3 Yohanes", pasal: 1 },
+            { id: "yudas", nama: "Yudas", pasal: 1 }, { id: "wahyu", nama: "Wahyu", pasal: 22 }
+        ];
+
+        const kitabSelect = document.getElementById('kitab');
+        const pasalSelect = document.getElementById('pasal');
+        const output = document.getElementById('output');
+
+        // Mengisi daftar kitab saat halaman dimuat
+        daftarKitab.forEach(k => {
+            let option = document.createElement('option');
+            option.value = k.id;
+            option.textContent = k.nama;
+            kitabSelect.appendChild(option);
+        });
+
+        // Fungsi untuk memperbarui jumlah pasal secara dinamis
+        function updatePasal() {
+            const kitabTerpilih = daftarKitab.find(k => k.id === kitabSelect.value);
+            pasalSelect.innerHTML = ""; // Kosongkan pasal sebelumnya
+            
+            for (let i = 1; i <= kitabTerpilih.pasal; i++) {
+                let option = document.createElement('option');
+                option.value = i;
+                option.textContent = `Pasal ${i}`;
+                pasalSelect.appendChild(option);
+            }
+        }
+
+        // Jalankan updatePasal pertama kali agar opsi pasal langsung muncul
+        updatePasal();
+
+        // Fungsi untuk mengambil data ayat dari API
+        async function ambilAyat() {
+            const kitab = kitabSelect.value;
+            const pasal = pasalSelect.value;
+            
+            output.innerHTML = "Sedang memuat teks Alkitab...";
+            
+            try {
+                const respon = await fetch(`https://vercel.app{kitab}&chapter=${pasal}`);
+                const data = await respon.json();
+                
+                if(data.verses && data.verses.length > 0) {
+                    output.innerHTML = `<h2>${data.book} ${data.chapter}</h2>`;
+                    data.verses.forEach(v => {
+                        output.innerHTML += `<p class="ayat"><span class="nomor">${v.verse}</span>${v.text}</p>`;
+                    });
+                    window.scrollTo({top: output.offsetTop - 20, behavior: 'smooth'});
+                } else {
+                    output.innerHTML = "Maaf, pasal tidak ditemukan atau terjadi kesalahan data.";
+                }
+            } catch (error) {
+                output.innerHTML = "Gagal mengambil data Alkitab. Periksa koneksi internet Anda.";
+            }
+        }
+    </script>
+</body>
+</html>
